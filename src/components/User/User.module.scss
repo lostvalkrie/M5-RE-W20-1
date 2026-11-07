@@ -1,0 +1,16 @@
+.div {
+  margin: 15px;
+  padding: 10px;
+  background: rgb(238, 233, 233);
+  max-width: 400px;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  border-radius: 15px;
+  gap: 15px;
+}
+
+.pfp {
+  border-radius: 50%;
+  object-fit: cover;
+}
