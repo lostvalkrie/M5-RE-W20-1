@@ -6,7 +6,7 @@ import { addTodo, deleteTodo, toggleTodo } from "../../store/slices/todoSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const TaskSchema = yup.object().shape({
-  body: yup
+  title: yup
     .string()
     .trim()
     .min(3, "Занадто коротке завдання (мінімум 3 символи)")
@@ -21,8 +21,8 @@ function TodoPage() {
   const handleSubmit = (values, { resetForm }) => {
     const newTask = {
       id: crypto.randomUUID(),
-      body: values.body,
-      isDone: false,
+      title: values.title,
+      completed: false,
       deadline: values.deadline,
     };
 
@@ -30,8 +30,8 @@ function TodoPage() {
     resetForm();
   };
 
-  const isOverdue = (deadline, isDone) => {
-    if (isDone) {
+  const isOverdue = (deadline, completed) => {
+    if (completed) {
       return false;
     }
     return new Date(deadline) < new Date();
@@ -42,7 +42,7 @@ function TodoPage() {
       <h2 className={styles.title}>Мої завдання</h2>
 
       <Formik
-        initialValues={{ body: "", deadline: "" }}
+        initialValues={{ title: "", deadline: "" }}
         validationSchema={TaskSchema}
         onSubmit={handleSubmit}
       >
@@ -92,14 +92,14 @@ function TodoPage() {
 
       <ul className={styles.list}>
         {tasks.map((task) => {
-          const overdue = isOverdue(task.deadline, task.isDone);
+          const overdue = isOverdue(task.deadline, task.completed);
 
           const taskClassNames = classNames(styles.item, {
-            [styles.done]: task.isDone,
+            [styles.done]: task.completed,
             [styles.overdue]: overdue,
           });
           const bodyClassNames = classNames(styles.taskText, {
-            [styles.taskTextDone]: task.isDone,
+            [styles.taskTextDone]: task.completed,
           });
           const deadlineClassNames = classNames(styles.taskDeadline, {
             [styles.deadlineOverdue]: overdue,
@@ -111,7 +111,7 @@ function TodoPage() {
                 <input
                   type="checkbox"
                   className={styles.checkbox}
-                  checked={task.isDone}
+                  checked={task.completed}
                   onChange={() => dispatch(toggleTodo(task.id))}
                 />
                 <span className={bodyClassNames}>{task.body}</span>

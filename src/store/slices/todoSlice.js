@@ -1,23 +1,27 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import * as API from "../../api/todosAPI";
 
-const initialTasks = [
-  {
-    id: "1",
-    body: "Вивчити основи Redux Toolkit",
-    isDone: false,
-    deadline: "2026-11-01",
+const initialState = {
+  todos: [],
+  isFetching: false,
+  error: null,
+};
+
+const getTodosThunk = createAsyncThunk(
+  "todos/getTodos",
+  async (payload, thunkAPI) => {
+    try {
+      const { data } = await API.getTodos();
+      return data;
+    } catch (e) {
+      return thunkAPI.rejectWithValue({ message: e.message });
+    }
   },
-  {
-    id: "2",
-    body: "Підключити Formik та Yup до форми",
-    isDone: true,
-    deadline: "2026-10-20",
-  },
-];
+);
 
 const todoSlice = createSlice({
   name: "todos",
-  initialState: initialTasks,
+  initialState,
   reducers: {
     deleteTodo: (state, action) => {
       return state.filter((t) => t.id !== action.payload);
@@ -25,12 +29,26 @@ const todoSlice = createSlice({
     toggleTodo: (state, action) => {
       const task = state.find((t) => t.id === action.payload);
       if (task) {
-        task.isDone = !task.isDone;
+        task.completed = !task.completed;
       }
     },
     addTodo: (state, action) => {
       state.push(action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(getTodosThunk.pending, (state) => {
+      state.isFetching = true;
+      state.error = null;
+    });
+    builder.addCase(getTodosThunk.fulfilled, (state, { payload }) => {
+      state.todos = payload;
+      state.isFetching = false;
+    });
+    builder.addCase(getTodosThunk.rejected, (state, { payload }) => {
+      state.error = payload;
+      state.isFetching = false;
+    });
   },
 });
 
