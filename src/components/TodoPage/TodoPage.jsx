@@ -2,7 +2,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
 import classNames from "classnames";
 import styles from "./TodoPage.module.scss";
-import { addTodo, deleteTodo, toggleTodo } from "../store/todoSlice";
+import { addTodo, deleteTodo, toggleTodo } from "../../store/slices/todoSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const TaskSchema = yup.object().shape({
