@@ -1,9 +1,11 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
+import { addTodo, getTodosThunk } from "../../store/slices/todoSlice";
+import { useDispatch, useSelector } from "react-redux";
+import MapTasks from "./MapTasks/MapTasks";
+import { useEffect } from "react";
 import classNames from "classnames";
 import styles from "./TodoPage.module.scss";
-import { addTodo, deleteTodo, toggleTodo } from "../../store/slices/todoSlice";
-import { useDispatch, useSelector } from "react-redux";
 
 const TaskSchema = yup.object().shape({
   title: yup
@@ -11,30 +13,25 @@ const TaskSchema = yup.object().shape({
     .trim()
     .min(3, "Занадто коротке завдання (мінімум 3 символи)")
     .required("Обов'язкове поле"),
-  deadline: yup.date().required("Вкажіть дедлайн"),
 });
 
 function TodoPage() {
-  const tasks = useSelector((state) => state.todos);
+  const { todos, isFetching, error } = useSelector((state) => state.todos);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getTodosThunk());
+  }, []);
 
   const handleSubmit = (values, { resetForm }) => {
     const newTask = {
       id: crypto.randomUUID(),
       title: values.title,
       completed: false,
-      deadline: values.deadline,
     };
 
     dispatch(addTodo(newTask));
     resetForm();
-  };
-
-  const isOverdue = (deadline, completed) => {
-    if (completed) {
-      return false;
-    }
-    return new Date(deadline) < new Date();
   };
 
   return (
@@ -42,41 +39,25 @@ function TodoPage() {
       <h2 className={styles.title}>Мої завдання</h2>
 
       <Formik
-        initialValues={{ title: "", deadline: "" }}
+        initialValues={{ title: "" }}
         validationSchema={TaskSchema}
         onSubmit={handleSubmit}
       >
         {({ errors, touched }) => {
-          const bodyClassNames = classNames(styles.input, {
-            [styles.errorInput]: errors.body && touched.body,
-          });
-          const deadlineClassNames = classNames(styles.input, {
-            [styles.errorInput]: errors.deadline && touched.deadline,
+          const titleClassNames = classNames(styles.input, {
+            [styles.errorInput]: errors.title && touched.title,
           });
 
           return (
             <Form className={styles.form}>
               <div className={styles.fieldGroup}>
                 <Field
-                  name="body"
+                  name="title"
                   placeholder="Що треба зробити?"
-                  className={bodyClassNames}
+                  className={titleClassNames}
                 />
                 <ErrorMessage
-                  name="body"
-                  component="div"
-                  className={styles.errorMsg}
-                />
-              </div>
-
-              <div className={styles.fieldGroup}>
-                <Field
-                  type="date"
-                  name="deadline"
-                  className={deadlineClassNames}
-                />
-                <ErrorMessage
-                  name="deadline"
+                  name="title"
                   component="div"
                   className={styles.errorMsg}
                 />
@@ -91,42 +72,11 @@ function TodoPage() {
       </Formik>
 
       <ul className={styles.list}>
-        {tasks.map((task) => {
-          const overdue = isOverdue(task.deadline, task.completed);
-
-          const taskClassNames = classNames(styles.item, {
-            [styles.done]: task.completed,
-            [styles.overdue]: overdue,
-          });
-          const bodyClassNames = classNames(styles.taskText, {
-            [styles.taskTextDone]: task.completed,
-          });
-          const deadlineClassNames = classNames(styles.taskDeadline, {
-            [styles.deadlineOverdue]: overdue,
-          });
-
-          return (
-            <li key={task.id} className={taskClassNames}>
-              <div className={styles.taskInfo}>
-                <input
-                  type="checkbox"
-                  className={styles.checkbox}
-                  checked={task.completed}
-                  onChange={() => dispatch(toggleTodo(task.id))}
-                />
-                <span className={bodyClassNames}>{task.body}</span>
-                <span className={deadlineClassNames}>({task.deadline})</span>
-              </div>
-
-              <button
-                className={styles.deleteBtn}
-                onClick={() => dispatch(deleteTodo(task.id))}
-              >
-                Видалити
-              </button>
-            </li>
-          );
-        })}
+        {isFetching && <p>Fetching...</p>}
+        {error && <p>Error while loading!</p>}
+        {todos.map((task) => (
+          <MapTasks key={task.id} task={task} />
+        ))}
       </ul>
     </article>
   );

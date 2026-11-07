@@ -7,7 +7,7 @@ const initialState = {
   error: null,
 };
 
-const getTodosThunk = createAsyncThunk(
+export const getTodosThunk = createAsyncThunk(
   "todos/getTodos",
   async (payload, thunkAPI) => {
     try {
@@ -24,16 +24,16 @@ const todoSlice = createSlice({
   initialState,
   reducers: {
     deleteTodo: (state, action) => {
-      return state.filter((t) => t.id !== action.payload);
+      state.todos = state.todos.filter((t) => t.id !== action.payload);
     },
     toggleTodo: (state, action) => {
-      const task = state.find((t) => t.id === action.payload);
+      const task = state.todos.find((t) => t.id === action.payload);
       if (task) {
         task.completed = !task.completed;
       }
     },
     addTodo: (state, action) => {
-      state.push(action.payload);
+      state.todos.unshift(action.payload);
     },
   },
   extraReducers: (builder) => {
